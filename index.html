@@ -457,27 +457,49 @@ const PAIRS = [
 ];
 
 // ============================================================
-//  SHARED LEADERBOARD — Stored server-side via window.storage
-//  shared=true means ALL players see the same leaderboard
+//  SHARED LEADERBOARD — Stored via JSONBin.io (fonctionne sur
+//  GitHub Pages, PC et mobile, pour tous les joueurs)
+//
+//  CONFIGURATION :
+//  1. Créez un compte gratuit sur https://jsonbin.io
+//  2. Allez dans "API Keys" → copiez votre Master Key
+//  3. Créez un nouveau Bin avec ce JSON initial : []
+//  4. Copiez l'ID du Bin (ex: 64abc123...)
+//  5. Remplacez BIN_ID et API_KEY ci-dessous
 // ============================================================
-const STORAGE_KEY = "memory_dyslexie_leaderboard_v3";
-const MAX_SCORES = 8; // top 8 joueurs affichés
+const MAX_SCORES = 8;
+
+// ⚠️ REMPLACEZ CES DEUX VALEURS :
+const BIN_ID  = "69e5cedaaaba88219719bc99";   // ex: "683f2a1b8a456b796832c1d0"
+const API_KEY = "$2a$10$YzEbMMoEhYWOizjvFfV/q..yoLC9pWydj9VIxFDXL95C4FWZSdnii"; // ex: "$2a$10$xxxxxxxxxxxxxxxxxxxx"
+
+const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
 async function getScores() {
   try {
-    const result = await window.storage.get(STORAGE_KEY, true); // true = shared
-    if (result && result.value) {
-      return JSON.parse(result.value);
-    }
-    return [];
+    const res = await fetch(BIN_URL + "/latest", {
+      headers: { "X-Master-Key": API_KEY }
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    // Le bin contient {"scores": [...]}
+    return Array.isArray(data.record.scores) ? data.record.scores : [];
   } catch(e) {
+    console.error("Erreur lecture scores:", e);
     return [];
   }
 }
 
 async function saveScores(scores) {
   try {
-    await window.storage.set(STORAGE_KEY, JSON.stringify(scores), true); // true = shared
+    await fetch(BIN_URL, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Master-Key": API_KEY
+      },
+      body: JSON.stringify({ scores }) // On enveloppe dans {"scores": [...]}
+    });
   } catch(e) {
     console.error("Erreur sauvegarde scores:", e);
   }
