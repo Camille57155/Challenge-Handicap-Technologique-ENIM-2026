@@ -11,9 +11,9 @@
     --wood-mid: #7a4f34;
     --wood-light: #c4915a;
     --cream: #fdf3e7;
-    --peach: #f5c4a0;
-    --orange: #e8843a;
-    --orange-dark: #c46020;
+    --peach: #aed6f1;
+    --orange: #3498db;
+    --orange-dark: #2980b9;
     --gold: #f5c842;
     --gold-dark: #d4a017;
     --white: #fff;
@@ -56,11 +56,9 @@
     overflow-x: hidden;
   }
 
-  /* ========== SCREENS ========== */
   .screen { display: none; width: 100%; min-height: 100vh; align-items: center; justify-content: center; padding: 20px; }
   .screen.active { display: flex; }
 
-  /* ========== WELCOME SCREEN ========== */
   .welcome-card {
     background: linear-gradient(160deg, #fdf3e7 0%, #f9e8d0 100%);
     border: 3px solid var(--orange);
@@ -131,8 +129,8 @@
   }
   .btn:hover { background: linear-gradient(135deg, #cce4f7 0%, #a8cfe8 100%); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
   .btn:active { transform: translateY(1px); }
+  .btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
 
-  /* ========== GAME SCREEN ========== */
   .game-wrapper {
     width: 100%;
     max-width: 800px;
@@ -167,7 +165,6 @@
   }
   .timer-box span { font-variant-numeric: tabular-nums; }
 
-  /* GRID */
   .cards-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -178,7 +175,6 @@
     padding: 20px;
   }
 
-  /* CARD */
   .card {
     aspect-ratio: 1;
     perspective: 600px;
@@ -203,19 +199,15 @@
     padding: 8px;
     box-shadow: 0 3px 12px rgba(0,0,0,0.4);
   }
-  /* BACK */
   .card-back {
-   background: #fff; /* Couleur de fond si l'image ne charge pas */
-   border: 2px solid var(--orange); /* Garde une petite bordure élégante */
-   padding: 0; /* Important pour que l'image prenne toute la place */
+   background: #fff;
+   border: 2px solid var(--orange);
+   padding: 0;
    overflow: hidden;
   }
-
   .card-back img {
    display: block;
   }
-
-  /* FRONT */
   .card-front {
     transform: rotateY(180deg);
     background: var(--cream);
@@ -225,25 +217,23 @@
     text-align: center;
   }
   .card-front.image-card { 
-  background: #fff;
-  padding: 0; /* On enlève le padding pour que l'image prenne toute la place */
-  overflow: hidden; /* Pour que les coins arrondis de l'image suivent la carte */
+    background: #fff;
+    padding: 0;
+    overflow: hidden;
   }
   .card-front.image-card {
     display: flex;
-    align-items: center; /* Centre verticalement */
-    justify-content: center; /* Centre horizontalement */
-    background: #fff; /* Fond blanc pour les espaces vides éventuels */
-    padding: 5px; /* Optionnel : petite marge interne pour que l'image ne touche pas les bords */
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    padding: 5px;
   }
-
   .card-front.image-card img {
     max-width: 100%;
     max-height: 100%;
-    object-fit: contain; /* L'image entière est visible, sans être déformée ni rognée */
+    object-fit: contain;
     display: block;
   }
-  
   .card-front.text-card {
     background: linear-gradient(135deg, #fdf3e7, #f5e0c8);
     padding: 10px;
@@ -268,7 +258,6 @@
     75%{transform:rotateY(180deg) translateX(6px)}
   }
 
-  /* ========== END SCREEN ========== */
   .end-card {
     background: linear-gradient(160deg, #fdf3e7 0%, #f0e0c8 100%);
     border: 2px solid #b8b8b8;
@@ -297,7 +286,6 @@
     font-style: italic;
   }
 
-  /* Name input */
   .name-form { display: flex; gap: 8px; margin-bottom: 18px; }
   .name-input {
     flex: 1;
@@ -332,15 +320,29 @@
   .leaderboard tr.highlight td { background: rgba(232,132,58,0.18); font-weight: 600; }
 
   .end-btn-row { display: flex; justify-content: center; margin-top: 20px; }
-
-  /* Ranks display */
   .rank-display { font-family: 'Playfair Display', serif; }
-
-  /* ========== DYSLEXIC TEXT STYLES ========== */
   .dyslexic-text sup { font-size: 0.55em; vertical-align: super; }
   .dyslexic-text sub { font-size: 0.55em; vertical-align: sub; }
 
-  /* Responsive */
+  /* Loading indicator */
+  .loading-scores {
+    text-align: center;
+    font-style: italic;
+    color: #888;
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+
+  /* Status message */
+  .status-msg {
+    text-align: center;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+    min-height: 20px;
+    font-style: italic;
+    color: #5a3520;
+  }
+
   @media (max-width: 480px) {
     .cards-grid { gap: 8px; padding: 12px; }
     .card-back svg { width: 55%; height: 55%; }
@@ -350,7 +352,7 @@
 </head>
 <body>
 
-<!-- ========== SCREEN 1: WELCOME ========== -->
+<!-- SCREEN 1: WELCOME -->
 <div class="screen active" id="screen-welcome">
   <div class="welcome-card">
     <h1>Bienvenue au Challenge Handicap et technologique.</h1>
@@ -364,7 +366,7 @@
   </div>
 </div>
 
-<!-- ========== SCREEN 2: GAME ========== -->
+<!-- SCREEN 2: GAME -->
 <div class="screen" id="screen-game">
   <div class="game-wrapper">
     <div class="game-header">
@@ -375,18 +377,21 @@
   </div>
 </div>
 
-<!-- ========== SCREEN 3: END ========== -->
+<!-- SCREEN 3: END -->
 <div class="screen" id="screen-end">
   <div class="end-card">
     <h2>Tableau des<br>meilleurs temps</h2>
     <p class="your-time" id="your-time-text"></p>
     <div class="name-form">
       <input class="name-input" id="player-name" type="text" maxlength="24" placeholder="Votre prénom…">
-      <button class="btn" onclick="submitScore()">Valider</button>
+      <button class="btn" id="submit-btn" onclick="submitScore()">Valider</button>
     </div>
+    <div class="status-msg" id="status-msg"></div>
     <table class="leaderboard" id="leaderboard-table">
       <thead><tr><th></th><th>Joueur</th><th>Temps</th></tr></thead>
-      <tbody id="leaderboard-body"></tbody>
+      <tbody id="leaderboard-body">
+        <tr><td colspan="3" class="loading-scores">Chargement du classement…</td></tr>
+      </tbody>
     </table>
     <div class="end-btn-row">
       <button class="btn" onclick="restartGame()">Rejouer</button>
@@ -398,56 +403,85 @@
 // ============================================================
 //  DATA
 // ============================================================
+const BANNED_WORDS = ["Caca", "Pute", "Con", "Salope", "Enculé","Pipi", "FDP", "Connard", "Connasse"];
+
 const PAIRS = [
   {
     id: 0,
     label: "Maladies invalidantes",
-    imageUrl: "img1.jpg", // Mettez le nom de votre fichier ici
+    imageUrl: "img1.jpg",
     definition: "Maldie ivalibante"
   },
   {
     id: 1,
     label: "Déficience motrice",
-    imageUrl: "img2.jpg", // Mettez le nom de votre fichier ici
+    imageUrl: "img2.jpg",
     definition: "DeFIcieNcE mOtrICe"
   },
   {
     id: 2,
     label: "Handicap mental",
-    imageUrl: "img3.jpg", // Mettez le nom de votre fichier ici
+    imageUrl: "img3.jpg",
     definition: "Handcaq mntal"
   },
   {
     id: 3,
     label: "Déficience auditive",
-    imageUrl: "img4.jpg", // Mettez le nom de votre fichier ici
+    imageUrl: "img4.jpg",
     definition: "DeFIcIeNcE AUditiVe"
   },
   {
     id: 4,
     label: "Déficience visuelle",
-    imageUrl: "img5.jpg", // Mettez le nom de votre fichier ici
+    imageUrl: "img5.jpg",
     definition: "Dficince vsuelle"
   },
   {
     id: 5,
     label: "Handicap cognitif",
-    imageUrl: "img6.jpg", // Mettez le nom de votre fichier ici
+    imageUrl: "img6.jpg",
     definition: "Hadcaq cogintif"
   },
   {
     id: 6,
     label: "Allergies",
-    imageUrl: "img7.jpg", // Mettez le nom de votre fichier ici
+    imageUrl: "img7.jpg",
     definition: "ALlregeis"
   },
   {
     id: 7,
     label: "Maladies cardio-vasculaires",
-    imageUrl: "img8.jpg", // Mettez le nom de votre fichier ici
+    imageUrl: "img8.jpg",
     definition: "Maldie carbio-vaculiare"
   },
 ];
+
+// ============================================================
+//  SHARED LEADERBOARD — Stored server-side via window.storage
+//  shared=true means ALL players see the same leaderboard
+// ============================================================
+const STORAGE_KEY = "memory_dyslexie_leaderboard_v3";
+const MAX_SCORES = 8; // top 8 joueurs affichés
+
+async function getScores() {
+  try {
+    const result = await window.storage.get(STORAGE_KEY, true); // true = shared
+    if (result && result.value) {
+      return JSON.parse(result.value);
+    }
+    return [];
+  } catch(e) {
+    return [];
+  }
+}
+
+async function saveScores(scores) {
+  try {
+    await window.storage.set(STORAGE_KEY, JSON.stringify(scores), true); // true = shared
+  } catch(e) {
+    console.error("Erreur sauvegarde scores:", e);
+  }
+}
 
 // ============================================================
 //  STATE
@@ -459,19 +493,6 @@ let matchedPairs = 0;
 let isLocked = false;
 let currentTime = 0;
 let scoreSubmitted = false;
-
-// Shared leaderboard stored in memory (simulated shared via localStorage key)
-const STORAGE_KEY = "memory_dyslexie_scores_v2";
-
-function getScores() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch(e) { return []; }
-}
-function saveScores(scores) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(scores)); } catch(e) {}
-}
 
 // ============================================================
 //  TIMER
@@ -508,7 +529,7 @@ function shuffle(arr) {
 }
 
 // ============================================================
-//  CARD LOGO (back) SVG
+//  CARD LOGO (back)
 // ============================================================
 const CARD_BACK_SVG = `<img src="img9.jpg" style="width:100%; height:100%; object-fit:cover; border-radius:10px; display:block;">`;
 
@@ -521,15 +542,13 @@ function buildGrid() {
 
   const cards = [];
   PAIRS.forEach(pair => {
-    // On crée une carte de type 'image'
     cards.push({ pairId: pair.id, type: 'image', content: pair.imageUrl });
-    // On crée une carte de type 'text' qui contient la définition
     cards.push({ pairId: pair.id, type: 'text', content: pair.definition });
   });
   
   const shuffled = shuffle(cards);
 
-  shuffled.forEach((cardData, idx) => {
+  shuffled.forEach((cardData) => {
     const card = document.createElement('div');
     card.className = 'card';
     card.dataset.pairId = cardData.pairId;
@@ -537,13 +556,11 @@ function buildGrid() {
 
     let frontContent = '';
     if (cardData.type === 'image') {
-      // Affichage de l'image
       frontContent = `
         <div class="card-face card-front image-card">
           <img src="${cardData.content}" style="width:100%; height:100%; object-fit:cover; border-radius:10px;">
         </div>`;
     } else {
-      // Affichage de la définition
       frontContent = `
         <div class="card-face card-front text-card">
           <span class="dyslexic-text">${cardData.content}</span>
@@ -558,7 +575,6 @@ function buildGrid() {
 
     card.addEventListener('click', () => onCardClick(card));
     grid.appendChild(card);
-    // ... (gardez votre animation de delay ici)
   });
 }
 
@@ -626,35 +642,79 @@ function restartGame() {
 // ============================================================
 //  END & LEADERBOARD
 // ============================================================
-function showEnd() {
+async function showEnd() {
   showScreen('screen-end');
   document.getElementById('your-time-text').textContent = `Votre temps : ${formatTime(currentTime)}`;
   document.getElementById('player-name').value = '';
+  document.getElementById('status-msg').textContent = '';
+  document.getElementById('submit-btn').disabled = false;
   scoreSubmitted = false;
-  renderLeaderboard(null);
+
+  // Afficher "chargement" puis charger le classement
+  document.getElementById('leaderboard-body').innerHTML =
+    '<tr><td colspan="3" class="loading-scores">Chargement du classement…</td></tr>';
+  
+  const scores = await getScores();
+  renderLeaderboard(scores, null);
 }
 
-function submitScore() {
+async function submitScore() {
   if (scoreSubmitted) return;
-  const name = document.getElementById('player-name').value.trim() || 'Anonyme';
-  const scores = getScores();
-  scores.push({ name, time: currentTime });
-  scores.sort((a, b) => a.time - b.time);
-  saveScores(scores);
-  scoreSubmitted = true;
-  renderLeaderboard(name);
+
+  const btn = document.getElementById('submit-btn');
+  const statusEl = document.getElementById('status-msg');
+  
+  let name = document.getElementById('player-name').value.trim();
+
+  // Vérification des mots interdits
+  const lowerName = name.toLowerCase();
+  const isBanned = BANNED_WORDS.some(word => lowerName.includes(word.toLowerCase()));
+  if (isBanned) {
+    alert("Ce pseudonyme n'est pas autorisé. Merci d'en choisir un autre.");
+    document.getElementById('player-name').value = '';
+    return;
+  }
+
+  if (!name) name = 'Anonyme';
+
+  btn.disabled = true;
+  statusEl.textContent = 'Enregistrement…';
+
+  try {
+    // Récupérer les scores actuels (partagés)
+    const scores = await getScores();
+
+    // Ajouter le nouveau score
+    scores.push({ name, time: currentTime });
+
+    // Trier par temps croissant
+    scores.sort((a, b) => a.time - b.time);
+
+    // Garder uniquement le top MAX_SCORES
+    const topScores = scores.slice(0, MAX_SCORES);
+
+    // Sauvegarder dans le stockage partagé
+    await saveScores(topScores);
+
+    scoreSubmitted = true;
+    statusEl.textContent = '✓ Score enregistré !';
+
+    renderLeaderboard(topScores, name);
+  } catch(e) {
+    statusEl.textContent = 'Erreur lors de l\'enregistrement.';
+    btn.disabled = false;
+  }
 }
 
-function renderLeaderboard(highlightName) {
-  const scores = getScores();
+function renderLeaderboard(scores, highlightName) {
   const tbody = document.getElementById('leaderboard-body');
   tbody.innerHTML = '';
 
-  const ranks = ['1ᵉʳ', '2ᵉᵐᵉ', '3ᵉᵐᵉ', '4ᵉᵐᵉ', '5ᵉᵐᵉ', '6ᵉᵐᵉ', '7ᵉᵐᵉ'];
-  const top = scores.slice(0, 7);
+  const ranks = ['1ᵉʳ', '2ᵉᵐᵉ', '3ᵉᵐᵉ', '4ᵉᵐᵉ', '5ᵉᵐᵉ', '6ᵉᵐᵉ', '7ᵉᵐᵉ', '8ᵉᵐᵉ'];
+  const top = scores.slice(0, MAX_SCORES);
 
-  // Pad to 7
-  while (top.length < 7) top.push(null);
+  // Compléter à MAX_SCORES lignes
+  while (top.length < MAX_SCORES) top.push(null);
 
   top.forEach((entry, i) => {
     const tr = document.createElement('tr');
