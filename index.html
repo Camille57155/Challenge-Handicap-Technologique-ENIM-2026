@@ -482,8 +482,7 @@ async function getScores() {
     });
     if (!res.ok) return [];
     const data = await res.json();
-    // Le bin contient {"scores": [...]}
-    return Array.isArray(data.record.scores) ? data.record.scores : [];
+    return Array.isArray(data.record) ? data.record : [];
   } catch(e) {
     console.error("Erreur lecture scores:", e);
     return [];
@@ -498,7 +497,7 @@ async function saveScores(scores) {
         "Content-Type": "application/json",
         "X-Master-Key": API_KEY
       },
-      body: JSON.stringify({ scores }) // On enveloppe dans {"scores": [...]}
+      body: JSON.stringify(scores)
     });
   } catch(e) {
     console.error("Erreur sauvegarde scores:", e);
@@ -623,6 +622,7 @@ function onCardClick(card) {
         matchedPairs++;
         if (matchedPairs === PAIRS.length) {
           stopTimer();
+          prefetchScores(); // Lance la requête JSONBin immédiatement
           setTimeout(showEnd, 600);
         }
       } else {
@@ -664,6 +664,14 @@ function restartGame() {
 // ============================================================
 //  END & LEADERBOARD
 // ============================================================
+
+// Cache pré-chargé dès que la dernière paire est trouvée
+let cachedScoresPromise = null;
+
+function prefetchScores() {
+  cachedScoresPromise = getScores();
+}
+
 async function showEnd() {
   showScreen('screen-end');
   document.getElementById('your-time-text').textContent = `Votre temps : ${formatTime(currentTime)}`;
@@ -672,11 +680,12 @@ async function showEnd() {
   document.getElementById('submit-btn').disabled = false;
   scoreSubmitted = false;
 
-  // Afficher "chargement" puis charger le classement
   document.getElementById('leaderboard-body').innerHTML =
     '<tr><td colspan="3" class="loading-scores">Chargement du classement…</td></tr>';
-  
-  const scores = await getScores();
+
+  // Utilise le pré-chargement lancé à la fin de la partie si disponible
+  if (!cachedScoresPromise) cachedScoresPromise = getScores();
+  const scores = await cachedScoresPromise;
   renderLeaderboard(scores, null);
 }
 
@@ -703,19 +712,14 @@ async function submitScore() {
   statusEl.textContent = 'Enregistrement…';
 
   try {
-    // Récupérer les scores actuels (partagés)
-    const scores = await getScores();
+    // Utiliser le cache si disponible
+    const scores = await (cachedScoresPromise || getScores());
+    cachedScoresPromise = null; // réinitialiser pour la prochaine partie
 
-    // Ajouter le nouveau score
     scores.push({ name, time: currentTime });
-
-    // Trier par temps croissant
     scores.sort((a, b) => a.time - b.time);
-
-    // Garder uniquement le top MAX_SCORES
     const topScores = scores.slice(0, MAX_SCORES);
 
-    // Sauvegarder dans le stockage partagé
     await saveScores(topScores);
 
     scoreSubmitted = true;
