@@ -622,7 +622,7 @@ function onCardClick(card) {
         matchedPairs++;
         if (matchedPairs === PAIRS.length) {
           stopTimer();
-          prefetchScores(); // Lance la requête JSONBin immédiatement
+          prefetchScores(); // Lance la requête en arrière-plan pendant l'animation
           setTimeout(showEnd, 600);
         }
       } else {
@@ -665,11 +665,12 @@ function restartGame() {
 //  END & LEADERBOARD
 // ============================================================
 
-// Cache pré-chargé dès que la dernière paire est trouvée
-let cachedScoresPromise = null;
+// Pré-chargement : lancé dès la dernière carte retournée
+let prefetchedScores = null;
 
 function prefetchScores() {
-  cachedScoresPromise = getScores();
+  // On lance la requête en arrière-plan et on stocke la PROMESSE
+  prefetchedScores = getScores();
 }
 
 async function showEnd() {
@@ -683,9 +684,9 @@ async function showEnd() {
   document.getElementById('leaderboard-body').innerHTML =
     '<tr><td colspan="3" class="loading-scores">Chargement du classement…</td></tr>';
 
-  // Utilise le pré-chargement lancé à la fin de la partie si disponible
-  if (!cachedScoresPromise) cachedScoresPromise = getScores();
-  const scores = await cachedScoresPromise;
+  // Si prefetch déjà lancé, souvent déjà terminé → affichage immédiat
+  if (!prefetchedScores) prefetchedScores = getScores();
+  const scores = await prefetchedScores;
   renderLeaderboard(scores, null);
 }
 
@@ -694,10 +695,9 @@ async function submitScore() {
 
   const btn = document.getElementById('submit-btn');
   const statusEl = document.getElementById('status-msg');
-  
+
   let name = document.getElementById('player-name').value.trim();
 
-  // Vérification des mots interdits
   const lowerName = name.toLowerCase();
   const isBanned = BANNED_WORDS.some(word => lowerName.includes(word.toLowerCase()));
   if (isBanned) {
@@ -712,9 +712,10 @@ async function submitScore() {
   statusEl.textContent = 'Enregistrement…';
 
   try {
-    // Utiliser le cache si disponible
-    const scores = await (cachedScoresPromise || getScores());
-    cachedScoresPromise = null; // réinitialiser pour la prochaine partie
+    // IMPORTANT : on re-fetch toujours les scores frais au moment de valider
+    // pour ne pas écraser les scores d'autres joueurs arrivés entre-temps
+    const scores = await getScores();
+    prefetchedScores = null; // réinitialiser pour la prochaine partie
 
     scores.push({ name, time: currentTime });
     scores.sort((a, b) => a.time - b.time);
@@ -724,7 +725,6 @@ async function submitScore() {
 
     scoreSubmitted = true;
     statusEl.textContent = '✓ Score enregistré !';
-
     renderLeaderboard(topScores, name);
   } catch(e) {
     statusEl.textContent = 'Erreur lors de l\'enregistrement.';
