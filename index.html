@@ -457,32 +457,19 @@ const PAIRS = [
 ];
 
 // ============================================================
-//  SHARED LEADERBOARD — Stored via JSONBin.io (fonctionne sur
-//  GitHub Pages, PC et mobile, pour tous les joueurs)
-//
-//  CONFIGURATION :
-//  1. Créez un compte gratuit sur https://jsonbin.io
-//  2. Allez dans "API Keys" → copiez votre Master Key
-//  3. Créez un nouveau Bin avec ce JSON initial : []
-//  4. Copiez l'ID du Bin (ex: 64abc123...)
-//  5. Remplacez BIN_ID et API_KEY ci-dessous
+//  SHARED LEADERBOARD — Firebase Realtime Database
+//  Fonctionne sur GitHub Pages, PC et mobile, pour tous les joueurs
 // ============================================================
 const MAX_SCORES = 8;
-
-// ⚠️ REMPLACEZ CES DEUX VALEURS :
-const BIN_ID  = "69e5cedaaaba88219719bc99";   // ex: "683f2a1b8a456b796832c1d0"
-const API_KEY = "$2a$10$YzEbMMoEhYWOizjvFfV/q..yoLC9pWydj9VIxFDXL95C4FWZSdnii"; // ex: "$2a$10$xxxxxxxxxxxxxxxxxxxx"
-
-const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+const FB_URL = "https://challenge-handicap-et-tech-default-rtdb.europe-west1.firebasedatabase.app/scores.json";
 
 async function getScores() {
   try {
-    const res = await fetch(BIN_URL + "/latest", {
-      headers: { "X-Master-Key": API_KEY }
-    });
+    const res = await fetch(FB_URL);
     if (!res.ok) return [];
     const data = await res.json();
-    return Array.isArray(data.record) ? data.record : [];
+    if (!data) return [];
+    return Object.values(data).sort((a, b) => a.time - b.time);
   } catch(e) {
     console.error("Erreur lecture scores:", e);
     return [];
@@ -491,13 +478,12 @@ async function getScores() {
 
 async function saveScores(scores) {
   try {
-    await fetch(BIN_URL, {
+    const obj = {};
+    scores.forEach((s, i) => { obj[i] = s; });
+    await fetch(FB_URL, {
       method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Master-Key": API_KEY
-      },
-      body: JSON.stringify(scores)
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(obj)
     });
   } catch(e) {
     console.error("Erreur sauvegarde scores:", e);
@@ -622,7 +608,7 @@ function onCardClick(card) {
         matchedPairs++;
         if (matchedPairs === PAIRS.length) {
           stopTimer();
-          prefetchScores(); // Lance la requête en arrière-plan pendant l'animation
+          prefetchScores();
           setTimeout(showEnd, 600);
         }
       } else {
@@ -664,12 +650,9 @@ function restartGame() {
 // ============================================================
 //  END & LEADERBOARD
 // ============================================================
-
-// Pré-chargement : lancé dès la dernière carte retournée
 let prefetchedScores = null;
 
 function prefetchScores() {
-  // On lance la requête en arrière-plan et on stocke la PROMESSE
   prefetchedScores = getScores();
 }
 
@@ -681,10 +664,10 @@ async function showEnd() {
   document.getElementById('submit-btn').disabled = false;
   scoreSubmitted = false;
 
+  // Afficher "chargement" puis charger le classement
   document.getElementById('leaderboard-body').innerHTML =
     '<tr><td colspan="3" class="loading-scores">Chargement du classement…</td></tr>';
-
-  // Si prefetch déjà lancé, souvent déjà terminé → affichage immédiat
+  
   if (!prefetchedScores) prefetchedScores = getScores();
   const scores = await prefetchedScores;
   renderLeaderboard(scores, null);
@@ -695,9 +678,10 @@ async function submitScore() {
 
   const btn = document.getElementById('submit-btn');
   const statusEl = document.getElementById('status-msg');
-
+  
   let name = document.getElementById('player-name').value.trim();
 
+  // Vérification des mots interdits
   const lowerName = name.toLowerCase();
   const isBanned = BANNED_WORDS.some(word => lowerName.includes(word.toLowerCase()));
   if (isBanned) {
@@ -712,19 +696,25 @@ async function submitScore() {
   statusEl.textContent = 'Enregistrement…';
 
   try {
-    // IMPORTANT : on re-fetch toujours les scores frais au moment de valider
-    // pour ne pas écraser les scores d'autres joueurs arrivés entre-temps
+    // Toujours re-fetch au moment de valider pour ne pas écraser les scores d'autres joueurs
     const scores = await getScores();
-    prefetchedScores = null; // réinitialiser pour la prochaine partie
+    prefetchedScores = null;
 
+    // Ajouter le nouveau score
     scores.push({ name, time: currentTime });
+
+    // Trier par temps croissant
     scores.sort((a, b) => a.time - b.time);
+
+    // Garder uniquement le top MAX_SCORES
     const topScores = scores.slice(0, MAX_SCORES);
 
+    // Sauvegarder dans le stockage partagé
     await saveScores(topScores);
 
     scoreSubmitted = true;
     statusEl.textContent = '✓ Score enregistré !';
+
     renderLeaderboard(topScores, name);
   } catch(e) {
     statusEl.textContent = 'Erreur lors de l\'enregistrement.';
